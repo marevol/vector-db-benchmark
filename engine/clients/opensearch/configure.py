@@ -42,7 +42,10 @@ class OpenSearchConfigurator(BaseConfigurator):
     def clean(self):
         try:
             self.client.indices.delete(
-                index=OPENSEARCH_INDEX, #timeout=300, master_timeout=300
+                index=OPENSEARCH_INDEX,
+                params={
+                  "timeout": 300,
+                },
             )
         except NotFoundError:
             pass
@@ -56,32 +59,35 @@ class OpenSearchConfigurator(BaseConfigurator):
         self.client.indices.create(
             index=OPENSEARCH_INDEX,
             body={
-            "settings": {
-                "index": {
-                    "knn": True,
+                "settings": {
+                    "index": {
+                        "knn": True,
+                    }
+                },
+                "mappings": {
+                    "properties": {
+                        "vector": {
+                            "type": "knn_vector",
+                            "dimension": dataset.config.vector_size,
+                            "method": {
+                                **{
+                                    "name": "hnsw",
+                                    "engine": "lucene",
+                                    "space_type": self.DISTANCE_MAPPING[dataset.config.distance],
+                                    "parameters": {
+                                        "m": 16,
+                                        "ef_construction": 100,
+                                    },
+                                },
+                                **collection_params.get("method"),
+                            },
+                        },
+                        **self._prepare_fields_config(dataset),
+                    }
                 }
             },
-            "mappings": {
-                "properties": {
-                    "vector": {
-                        "type": "knn_vector",
-                        "dimension": dataset.config.vector_size,
-                        "method": {
-                            **{
-                                "name": "hnsw",
-                                "engine": "lucene",
-                                "space_type": self.DISTANCE_MAPPING[dataset.config.distance],
-                                "parameters": {
-                                    "m": 16,
-                                    "ef_construction": 100,
-                                },
-                            },
-                            **collection_params.get("method"),
-                        },
-                    },
-                    **self._prepare_fields_config(dataset),
-                }
-            }
+            params={
+                "timeout": 300,
             },
         )
 

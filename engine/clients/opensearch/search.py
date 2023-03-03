@@ -72,6 +72,9 @@ class OpenSearchSearcher(BaseSearcher):
             body = {
                 "query": query,
                 "size": top,
+            },
+            params = {
+              "timeout": 60,
             }
         )
         return [
