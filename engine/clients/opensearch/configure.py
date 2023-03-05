@@ -1,4 +1,4 @@
-from opensearchpy import OpenSearch, NotFoundError
+from opensearchpy import NotFoundError, OpenSearch
 
 from benchmark.dataset import Dataset
 from engine.base_client import IncompatibilityError
@@ -44,7 +44,7 @@ class OpenSearchConfigurator(BaseConfigurator):
             self.client.indices.delete(
                 index=OPENSEARCH_INDEX,
                 params={
-                  "timeout": 300,
+                    "timeout": 300,
                 },
             )
         except NotFoundError:
@@ -73,7 +73,9 @@ class OpenSearchConfigurator(BaseConfigurator):
                                 **{
                                     "name": "hnsw",
                                     "engine": "lucene",
-                                    "space_type": self.DISTANCE_MAPPING[dataset.config.distance],
+                                    "space_type": self.DISTANCE_MAPPING[
+                                        dataset.config.distance
+                                    ],
                                     "parameters": {
                                         "m": 16,
                                         "ef_construction": 100,
@@ -84,11 +86,12 @@ class OpenSearchConfigurator(BaseConfigurator):
                         },
                         **self._prepare_fields_config(dataset),
                     }
-                }
+                },
             },
             params={
                 "timeout": 300,
             },
+            cluster_manager_timeout="5m",
         )
 
     def _prepare_fields_config(self, dataset: Dataset):
